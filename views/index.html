@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rule Engine Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .response {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rule Engine Application</h1>
+
+        <div class="input-group">
+            <label for="ruleString">Enter Rule String:</label>
+            <input type="text" id="ruleString" placeholder="Example: (age > 30 AND department = 'Sales')">
+        </div>
+
+        <button onclick="createRule()">Create Rule</button>
+
+        <div class="input-group">
+            <label for="combinedRules">Combine Rules (Comma Separated):</label>
+            <input type="text" id="combinedRules" placeholder="Example: rule1, rule2">
+        </div>
+
+        <button onclick="combineRules()">Combine Rules</button>
+
+        <div class="input-group">
+            <label for="userData">Enter User Data (JSON format):</label>
+            <textarea id="userData" rows="5" placeholder='{"age": 35, "department": "Sales", "salary": 60000, "experience": 3}'></textarea>
+        </div>
+
+        <button onclick="evaluateRule()">Evaluate Rule</button>
+
+        <div class="response" id="response"></div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:8000/api';
+
+        async function createRule() {
+            const ruleString = document.getElementById('ruleString').value;
+
+            const response = await fetch(`${apiUrl}/createRule`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ruleString })
+            });
+
+            const data = await response.json();
+            document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+        }
+
+        async function combineRules() {
+            const rules = document.getElementById('combinedRules').value.split(',').map(rule => rule.trim());
+
+            const response = await fetch(`${apiUrl}/combineRules`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ rules })
+            });
+
+            const data = await response.json();
+            document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+        }
+
+        async function evaluateRule() {
+            const userData = document.getElementById('userData').value;
+            const parsedUserData = JSON.parse(userData); // Parse user data input
+            const astResponse = await fetch(`${apiUrl}/combineRules`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ rules: ['rule1'] }) // Replace with actual combined rule AST
+            });
+
+            const { combinedAST } = await astResponse.json();
+
+            const response = await fetch(`${apiUrl}/evaluateRule`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ast: combinedAST, userData: parsedUserData })
+            });
+
+            const data = await response.json();
+            document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>
